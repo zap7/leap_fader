@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+/------------------------------------------------------------------------------\
+| Copyright (C) 2012-2013 Leap Motion, Inc. All rights reserved.               |
+| Leap Motion proprietary and confidential. Not for distribution.              |
+| Use subject to the terms of the Leap Motion SDK Agreement available at       |
+| https://developer.leapmotion.com/sdk_agreement, or another agreement         |
+| between Leap Motion and you, your company or other organization.             |
+\------------------------------------------------------------------------------/
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Leap Motion Fade</title>
+<script src="http://js.leapmotion.com/0.2.0/leap.min.js"></script>
+<script>
+// Store frame for motion functions
+var previousFrame = null;
+var paused = false;
+var pauseOnGesture = false;
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+Leap.loop(controllerOptions, function(frame) {
+  if (paused) {
+    return; // Skip this update
+  }
+
+  var aud1 = document.getElementById("audioplay1");
+  var aud2 = document.getElementById("audioplay2");
+  // Display Hand object data
+  var handOutput = document.getElementById("handData");
+
+  // aud1.Volume = 1;
+  // aud2.Volume = 0;
+
+  var handString = "";
+  var xThreshold = 150.0;
+  var palmPos;
+  var xVal;
+
+  if (frame.hands.length > 0) {
+
+    for (var i = 0; i < frame.hands.length; i++) {
+      var hand = frame.hands[i];
+      
+      palmPos = hand.palmPosition;
+
+      // get the x values 
+      xVal = parseFloat(palmPos[0].toFixed(1));
+
+      if (xVal >= 0.0 && xVal < xThreshold) {
+
+           aud1.volume = (0.5 - 0.5*(xVal/xThreshold));
+           aud2.volume = (0.5 + 0.5*(xVal/xThreshold));
+      }
+      else if  (xVal < 0.0 && xVal > -150.0) {
+        
+          aud1.volume = (0.5 - 0.5 *(xVal/xThreshold));
+          aud2.volume = (0.5 + 0.5 *(xVal/xThreshold));
+      }
+      else
+      {
+          aud1.volume = 0.0;
+          aud2.volume = 1.0;
+      }
+
+      // handString += "Palm position: " + yVal + "  Volume: " + vector[1].toFixed(1)/300.0) + " mm<br />";
+       handString += "Palm position: " + xVal + " mm<br />";
+    }
+  }
+  else {
+    handString += "No hands";
+    aud1.volume = 0.0;
+    aud2.volume = 0.0;
+  }
+  handOutput.innerHTML = handString;
+
+  // Store frame for motion functions
+  previousFrame = frame;
+})
+
+function vectorToString(vector, digits) {
+  if (typeof digits === "undefined") {
+    digits = 1;
+  }
+  return "(" + vector[0].toFixed(digits)
+             + ")";
+}
+
+function togglePause() {
+  paused = !paused;
+
+  if (paused) {
+    document.getElementById("pause").innerText = "Resume";
+  } else {
+    document.getElementById("pause").innerText = "Pause";
+  }
+}
+
+function pauseForGestures() {
+  if (document.getElementById("pauseOnGesture").checked) {
+    pauseOnGesture = true;
+  } else {
+    pauseOnGesture = false;
+  }
+}
+
+</script>
+</head>
+<body>
+<h1>Leap Motion Fader</h1>
+<div id="main">
+  <!--
+  <button id="pause" onclick="togglePause()">Pause</button>
+  -->
+  <audio id="audioplay1" controls autoplay>
+    <source src="audio/open1.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="audioplay2" controls autoplay>
+    <source src="audio/open2.mp3" type="audio/mpeg">
+  </audio>
+  
+  <h3>Hand data:</h3>
+  <div id="handData"></div>
+</div>
+</body>
+</html>
